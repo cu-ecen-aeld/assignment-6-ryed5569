@@ -1,0 +1,51 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          misc-modules-start-stop
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Load selected LDD3 misc modules
+### END INIT INFO
+
+MODDIR="/lib/modules/$(uname -r)/extra"
+
+
+load_one() {
+  m="$1"
+  # Try modprobe for most, but skip for 'faulty' to avoid md/faulty conflict
+  if [ "$m" = "faulty" ]; then
+    insmod "$MODDIR/$m.ko" 2>/dev/null
+  else
+    modprobe "$m" 2>/dev/null || insmod "$MODDIR/$m.ko" 2>/dev/null
+  fi
+
+  # Verify, otherwise try insmod once more
+  if ! lsmod | awk '{print $1}' | grep -qx "$m"; then
+    insmod "$MODDIR/$m.ko" 2>/dev/null || true
+  fi
+}
+
+case "$1" in
+  start)
+    depmod -a "$(uname -r)" 2>/dev/null || true
+    for m in faulty hello short sleepy silly; do load_one "$m"; done
+    ;;
+  stop)
+    for m in silly sleepy short hello faulty; do
+      unload_module "$m"
+    done
+    ;;
+  restart)
+    "$0" stop; "$0" start ;;
+  status)
+    for m in faulty hello short sleepy silly; do
+      lsmod | awk '{print $1}' | grep -qx "$m" && echo "$m loaded" || echo "$m not loaded"
+    done
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart|status}" >&2
+    exit 1 ;;
+esac
+
+exit 0

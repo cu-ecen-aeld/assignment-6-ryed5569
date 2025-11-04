@@ -1,0 +1,24 @@
+From 1e0f4cfcf986d689994a5997fa79be44a28e65ee Mon Sep 17 00:00:00 2001
+From: Ryan <ryan.edwards-1@colorado.edu>
+Date: Mon, 3 Nov 2025 11:22:13 -0700
+Subject: [PATCH] LDD3: build only scull and misc-modules; include path fixes
+ for scull
+
+---
+ Makefile | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 7b08c49..9db8154 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,8 +1,5 @@
+ 
+-SUBDIRS =  misc-progs misc-modules \
+-           skull scull scullc scullp lddbus sculld scullv shortprint simple tty \
+-	   pci usb\
+-	   sbull snull short
++SUBDIRS = scull misc-modules
+ 
+ all: subdirs
+ 

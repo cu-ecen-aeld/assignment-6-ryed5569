@@ -1,0 +1,38 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          scull
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Load scull and create device nodes
+### END INIT INFO
+
+case "$1" in
+  start)
+    modprobe scull 2>/dev/null || insmod /lib/modules/$(uname -r)/extra/scull.ko || true
+    major=$(awk '$2=="scull"{print $1}' /proc/devices)
+    if [ -n "$major" ]; then
+      mkdir -p /dev/scull
+      for n in 0 1 2 3; do
+        [ -e /dev/scull$${n} ] || mknod /dev/scull$${n} c $major $n
+      done
+      chmod 666 /dev/scull*
+    fi
+    ;;
+  stop)
+    rmmod scull 2>/dev/null || true
+    ;;
+  restart)
+    $0 stop
+    $0 start
+    ;;
+  status)
+    lsmod | grep -q '^scull' && echo "scull loaded" || echo "scull not loaded"
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart|status}"
+    exit 1
+    ;;
+esac
+exit 0
